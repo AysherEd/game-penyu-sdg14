@@ -1,9 +1,13 @@
-// 1. Ambil elemen kanvas
+// 1. Ambil elemen kanvas & borang HTML
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+const formNama = document.getElementById('formNama');
+const inputNama = document.getElementById('inputNama');
+const btnHantar = document.getElementById('btnHantar');
+
 // =========================================================================
-// 🔗 MASUKKAN URL APPS SCRIPT GOOGLE SHEET ANDA DI SINI
+// 🔗 URL APPS SCRIPT GOOGLE SHEET ANDA
 // =========================================================================
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyfVWfMjCV16XFkB4ztFvieo7Fp_TUrfglgWufYl3uJX4YEF3LfFwRfeQ19OU4UysPv/exec";
 
@@ -24,7 +28,7 @@ let skor = 0;
 let nyawa = 3;
 let masa = 60;
 let gameOver = false;
-let dataSudahDihantar = false; // Penanda elak hantar data berulang kali
+let dataSudahDihantar = false;
 
 const KELAJUAN_ASAL = 5;
 let kelajuanSemasa = KELAJUAN_ASAL;
@@ -84,14 +88,14 @@ const keys = {};
 
 window.addEventListener('keydown', (e) => { 
     keys[e.key] = true; 
-    if (gameOver && (e.code === 'Space' || e.key === 'Enter')) {
+    if (gameOver && (e.code === 'Space' || e.key === 'Enter') && formNama.style.display === 'none') {
         mulaSemulaGame();
     }
 });
 window.addEventListener('keyup', (e) => { keys[e.key] = false; });
 
 canvas.addEventListener('click', (e) => {
-    if (gameOver) {
+    if (gameOver && formNama.style.display === 'none') {
         const rect = canvas.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
@@ -107,7 +111,42 @@ canvas.addEventListener('click', (e) => {
     }
 });
 
-// 7. Pemasa & Reset Game
+// 7. KLIK BUTANG HANTAR NAMA
+btnHantar.addEventListener('click', hantarSkorDaftar);
+
+function hantarSkorDaftar() {
+    let nama = inputNama.value.trim();
+    if (!nama) nama = "Pemain Anonim";
+
+    let statusText = "";
+    if (skor >= 100) statusText = "MISI BERJAYA 🏆";
+    else if (nyawa <= 0) statusText = "PENYU MATI ☠️";
+    else statusText = "MASA TAMAT ⏳";
+
+    btnHantar.innerText = "MENGHANTAR... ⏳";
+    btnHantar.disabled = true;
+
+    fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            nama: nama,
+            skor: skor,
+            status: statusText
+        })
+    })
+    .then(() => {
+        console.log(`Skor ${nama} berjaya dihantar!`);
+        formNama.style.display = 'none'; // Sembunyi borang lepas hantar
+    })
+    .catch(err => {
+        console.error('Ralat hantar data:', err);
+        formNama.style.display = 'none';
+    });
+}
+
+// 8. Pemasa & Reset Game
 let pemasaInterval;
 
 function mulaPemasa() {
@@ -127,7 +166,12 @@ function mulaSemulaGame() {
     nyawa = 3;
     masa = 60;
     gameOver = false;
-    dataSudahDihantar = false; // Reset penanda hantar data
+    dataSudahDihantar = false;
+    formNama.style.display = 'none'; // Sembunyi borang
+    inputNama.value = ''; // Kosongkan input
+    btnHantar.innerText = "HANTAR SKOR 🚀";
+    btnHantar.disabled = false;
+
     penyu.x = 200;
     penyu.y = 650;
     senaraiItemJatuh = [];
@@ -138,48 +182,12 @@ function mulaSemulaGame() {
     mulaPemasa();
 }
 
-// 8. FUNGSI MINTA NAMA & HANTAR KE GOOGLE SHEET
-function prosesMintaNamaDanHantar(markahAkhir, statusGame) {
-    if (APPS_SCRIPT_URL === "GANTIKAN_DENGAN_URL_WEB_APP_ANDA_DI_SINI" || !APPS_SCRIPT_URL) {
-        console.log("URL Google Apps Script belum dimasukkan.");
-        return;
-    }
-
-    // Beri sedikit masa (300ms) untuk paparan Game Over keluar dulu, baru keluar prompt nama
-    setTimeout(() => {
-        let namaPemain = prompt("Tahniah! Masukkan nama anda untuk Leaderboard:", "Pemain 1");
-        if (!namaPemain || namaPemain.trim() === "") {
-            namaPemain = "Pemain Anonim";
-        }
-
-        // Hantar ke Google Apps Script
-        fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                nama: namaPemain,
-                skor: markahAkhir,
-                status: statusGame
-            })
-        })
-        .then(() => console.log(`Markah ${namaPemain} berjaya dihantar ke Google Sheet!`))
-        .catch(err => console.error('Ralat hantar data:', err));
-    }, 300);
-}
-
 // 9. Kemaskini Posisi
 function kemaskini() {
-    // JIKA GAME OVER -> MINTA NAMA & HANTAR DATA SEKAUN SAHAJA
     if (gameOver) {
         if (!dataSudahDihantar) {
             dataSudahDihantar = true;
-            let statusText = "";
-            if (skor >= 100) statusText = "MISI BERJAYA 🏆";
-            else if (nyawa <= 0) statusText = "PENYU MATI ☠️";
-            else statusText = "MASA TAMAT ⏳";
-
-            prosesMintaNamaDanHantar(skor, statusText);
+            formNama.style.display = 'block'; // Tunjukkan borang nama comel
         }
         return;
     }
@@ -259,7 +267,7 @@ function lukis() {
     ctx.font = '20px "Courier New"';
     ctx.fillText(`${'❤️'.repeat(Math.max(0, nyawa))}`, 20, 75);
 
-    // Pop-up Menu
+    // Pop-up Menu Frame
     if (gameOver) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
