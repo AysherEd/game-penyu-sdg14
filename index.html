@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Penyu - SDG 14</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="game-container">
+        <!-- Kanvas Permainan -->
+        <canvas id="gameCanvas" width="450" height="800"></canvas>
+
+        <!-- Borang Taip Nama Comel (Ditunjuk Bila Game Over) -->
+        <div id="formNama" class="form-overlay" style="display: none;">
+            <h3>🏆 TAHNIAH! 🏆</h3>
+            <p>Masukkan nama anda untuk Leaderboard:</p>
+            <input type="text" id="inputNama" placeholder="Nama Anda..." maxlength="15">
+            <button id="btnHantar">HANTAR SKOR 🚀</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
