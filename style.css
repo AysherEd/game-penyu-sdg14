@@ -1,0 +1,27 @@
+/* Kemaskan paparan halaman */
+body {
+    background-color: #0f172a; /* Warna latar belakang biru gelap */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Courier New', Courier, monospace;
+    user-select: none;
+}
+
+/* Tetapan Kanvas Game (450x800) */
+canvas {
+    /* Ambil gambar back.png dari dalam folder assets */
+    background-image: url('assets/back.png'); 
+    background-size: 100% 100%;
+    background-position: center;
+    
+    border: 4px solid #ffffff;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+    display: block;
+    
+    /* PENTING UNTUK PIXEL ART: Elak imej jadi kabur */
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
